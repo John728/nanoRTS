@@ -41,6 +41,7 @@ def generate_data(num_data_points, num_samples=1000, noise=False,
             sys.stdout.write("\r{:.2f}% completed".format(percentage))
             sys.stdout.flush()
 
+
     if verbose:
         print("Exporting data to file...")
     with open(file_name, 'wb') as f:
