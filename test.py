@@ -30,8 +30,8 @@ class Print_Progress(Callback):
 
 data = {'rts': [], 'noisy_signal': []}
 
-num_data = 10_000
-num_samples = 1000
+num_data = 10
+num_samples = 5
 
 # print a pretty "processing" sign
 with open("ascii_text.txt", "r") as file:

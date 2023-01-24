@@ -1,11 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def generateRTS(transition_probs, num_samples, num_states = 2):
+def generate_RTS(transition_probs, num_samples, num_states = 2):
 
-    # Defi`ne the number of states and the transition probabilities
-    # transition_probs = np.array([[0.99, 0.01], [0.01, 0.99]])
-
+    # Define the number of states and the transition probabilities
     # Set the initial state
     current_state = 0
 
@@ -51,29 +49,27 @@ def rolling_average(signal, num_samples_per_average):
         rolling_averages[i] = np.mean(signal[start:i+1])
     return rolling_averages
 
-rts = generateRTS(
-    num_states=2, 
-    transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]), 
-    num_samples=1000
-)
+def get_sinusoidal_signal(num_samples, freq, amplitude):
+    # Generate a sinusoidal signal
+    signal = amplitude * np.sin(2 * np.pi * freq * np.arange(num_samples))
+    return signal
 
-# rts = generate_fixed_RTS(
-#     num_states=2, 
-#     transition_rate=200, 
-#     num_samples=1000
-# )
 
-noise = generate_gaussian_noise(num_samples=1000, mean=0, std=0.5)
+if __name__ == "__main__":
 
-noisy_rts = noise + rts
+    rts = generate_RTS(
+        num_states=2, 
+        transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]), 
+        num_samples=1000
+    )
 
-plt.plot(noisy_rts, '-o', markersize=2)
+    sinusoidal = get_sinusoidal_signal(num_samples=1000, freq=0.02, amplitude=0.2)
+    noise = generate_gaussian_noise(num_samples=1000, mean=0, std=0.5)
 
-noisy_rts = rolling_average(noisy_rts, 20)
+    noisy_rts = noise + rts
 
-plt.plot(noisy_rts, '-o', markersize=2)
-# plt.plot(rts, '-o', markersize=2)
-# plt.plot(rts, '-o', markersize=2)
-plt.xlabel('Time')
-plt.ylabel('State')
-plt.show()
+    plt.plot(sinusoidal + rts + noise, '-o', markersize=2)
+    plt.plot(rts, '-o', markersize=2)
+    plt.xlabel('Time')
+    plt.ylabel('State')
+    plt.show()

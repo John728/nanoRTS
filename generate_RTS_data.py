@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from generateRTS import generate_rts, generate_gaussian_noise
+from generate_RTS import generate_RTS, generate_gaussian_noise
 import sys
 
 data = {'rts': [], 'noisy_signal': []}
@@ -15,7 +15,7 @@ with open("ascii_text.txt", "r") as file:
 
 for i in range(num_data):
     # Generate RTS signal
-    rts = generate_rts(
+    rts = generate_RTS(
         num_states=2, 
         transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]), 
         num_samples=num_samples
