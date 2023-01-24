@@ -1,7 +1,4 @@
-*.pd
+*.pb
 *.pyc
 *.pkl
 variables
-fingerprint.pd
-keras_metadata.pd
-saved_model.pd
