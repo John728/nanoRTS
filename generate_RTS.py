@@ -49,7 +49,7 @@ def rolling_average(signal, num_samples_per_average):
         rolling_averages[i] = np.mean(signal[start:i+1])
     return rolling_averages
 
-def get_sinusoidal_signal(num_samples, freq, amplitude):
+def generate_sinusoidal_signal(num_samples, freq, amplitude):
     # Generate a sinusoidal signal
     signal = amplitude * np.sin(2 * np.pi * freq * np.arange(num_samples))
     return signal
@@ -63,8 +63,8 @@ if __name__ == "__main__":
         num_samples=1000
     )
 
-    sinusoidal = get_sinusoidal_signal(num_samples=1000, freq=0.02, amplitude=0.2)
-    noise = generate_gaussian_noise(num_samples=1000, mean=0, std=0.5)
+    sinusoidal = generate_sinusoidal_signal(num_samples=1000, freq=0.02, amplitude=0.4)
+    noise = generate_gaussian_noise(num_samples=1000, mean=0, std=0.7)
 
     noisy_rts = noise + rts
 

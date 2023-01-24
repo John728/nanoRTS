@@ -1,17 +1,16 @@
 import numpy as np
 import pandas as pd
-from generate_RTS import generate_RTS, generate_gaussian_noise
+from generate_RTS import generate_RTS, generate_gaussian_noise, generate_sinusoidal_signal
 import sys
 import pickle 
 
-def generate_data(num_data_points, num_samples=1000, noise=False, 
+def generate_data(num_data_points=10000, num_samples=1000, 
+                  noise=generate_gaussian_noise(num_samples=1000, mean=0, std=0.5), 
                   verbose=True, file_name='signals.pkl',
                   num_states=2, transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]])):
 
     data = {'rts': [], 'noisy_signal': []}
 
-    if not noise:
-        noise = generate_gaussian_noise(num_samples=num_samples, mean=0, std=0.5)
 
     # print a pretty "processing" sign
     if verbose:
@@ -43,10 +42,20 @@ def generate_data(num_data_points, num_samples=1000, noise=False,
 
 
     if verbose:
-        print("Exporting data to file...")
+        print("\nExporting data to file...")
     with open(file_name, 'wb') as f:
         pickle.dump(data, f)
+    f.close()
 
 
 if __name__ == '__main__':
-    generate_data(10, 5, verbose=True, file_name='signals.pkl')
+    generate_data(
+        num_data_points=10000,
+        num_samples=1000,
+        # noise=generate_gaussian_noise(num_samples=1000, mean=0, std=0.3),
+        noise=np.zeros(1000),
+        verbose=True,
+        file_name='signals.pkl',
+        num_states=2,
+        transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]])
+    )
