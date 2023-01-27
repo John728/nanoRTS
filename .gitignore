@@ -1,3 +1,4 @@
-*.pd
+*.pb
 *.pyc
 *.pkl
+variables
