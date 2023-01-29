@@ -27,12 +27,12 @@ class Print_Progress(Callback):
                 print(line[:-1])
 
     def on_epoch_end(self, epoch, logs={}):
-        sys.stdout.write("\r")
+        # sys.stdout.write("\r")
         # sys.stdout.write("\033c")
 
-        # percentage = round(((epoch + 1)/self.epochs) * 100, 3)
-        # sys.stdout.write("\r{:.2f}% completed, loss: {:.4f}".format(percentage, logs['loss']))
-        # sys.stdout.flush()
+        percentage = round(((epoch + 1)/self.epochs) * 100, 3)
+        sys.stdout.write("\r{:.2f}% completed, loss: {:.4f}".format(percentage, logs['loss']))
+        sys.stdout.flush()
     
     def on_train_end(self, logs=None):
         print()
@@ -66,11 +66,9 @@ def load_data(data_dir, validation_split=0.3):
 
     # Split the data into features and target
     X_train = np.array(df_train['noisy_signal'].tolist())
-    y_train = np.array(df_train['rts'].tolist())
-    X_valid = np.array(df_valid['noisy_signal'].tolist())
+    y_train = np.array(df_train['noisy_signal'].tolist())
+    X_valid = np.array(df_valid['rts'].tolist())
     y_valid = np.array(df_valid['rts'].tolist())
-
-
 
     return X_train, y_train, X_valid, y_valid    
 
@@ -119,63 +117,41 @@ def load_data(data_dir, validation_split=0.3):
 def generate_nn(X_train, y_train, X_valid, y_valid, input_shape, path_to_save, 
                 epochs=1000, batch_size=32, verbose=0):
     
-    start_time = time.time()
+    num_samples = input_shape[0]
 
-    # define the model
+    # Create the model
     model = Sequential([
-        layers.Dense(1000, activation='relu', input_shape=input_shape),
+        layers.Dense(1000, activation='relu', input_shape=(num_samples,)),
         layers.Dense(2000, activation='relu'),
         layers.Dense(3000, activation='relu'),
         layers.Dense(2000, activation='relu'),
-        layers.Dense(input_shape[0])
+        layers.Dense(num_samples)
     ])
 
-    # create the autoencoder model
-    # autoencoder = Model(input_layer, decoded)
+    # # Compile the model
     model.compile(optimizer='adam', loss='mae')
-
-    if verbose:
-        print("Pre-processing complete")
 
     # # Create the early stopping callback
     early_stopping = EarlyStopping(
         min_delta=0.001, # minimium amount of change to count as an improvement
-        patience=50, # how many epochs to wait before stopping
+        patience=20, # how many epochs to wait before stopping
         restore_best_weights=True,
-    )
-
-    reduce_lr = ReduceLROnPlateau(
-        monitor='loss',
-        factor=0.5,
-        patience=10,
-        min_lr=0.0001
     )
 
     print_progress = Print_Progress()
     print_progress.set_model(model)
 
-    if verbose:
-        print("Fitting model...")
-
+    # # Fit the model
     history = model.fit(
         X_train, y_train,
         validation_data=(X_valid, y_valid),
-        batch_size=batch_size,
-        epochs=epochs,
-        callbacks=[early_stopping, reduce_lr],
-        verbose=0,
-        initial_epoch=0
+        batch_size=200,
+        epochs=1000,
+        callbacks=[early_stopping, print_progress],
+        verbose=0
     )
 
-    # save the history
-    with open(path_to_save + '_history', 'wb') as f:
-        pickle.dump(history.history, f)
-    f.close()
-    
-    model.save(path_to_save)
-    end_time = time.time()
-
-    return end_time - start_time
+    model.save('./')
 
 def generate_autoencoder(X_train, y_train, X_valid, y_valid, input_shape, path_to_save, 
                          epochs=1000, batch_size=32, verbose=0):
