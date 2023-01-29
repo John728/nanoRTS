@@ -3,3 +3,4 @@
 *.pkl
 variables
 *.tfrecord
+settings.json
