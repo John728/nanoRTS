@@ -3,7 +3,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import numpy as np
 from matplotlib import pyplot as plt
 from generate_RTS import generate_RTS, generate_gaussian_noise, generate_gaussian_noise_SNR
-from create_model import generate_autoencoder, generate_general_nn, load_and_preprocess_data
+from create_model import generate_autoencoder, generate_nn, load_data
 from generate_RTS_data import generate_data
 from tensorflow import keras
 import sys
@@ -252,14 +252,31 @@ def generate_loss_vs_noise(model, snr_range: np.arange, file_name: str, num_avg:
 
 
 if __name__ == '__main__':
-    generate_SNR_data_vs_SNR_test(
-        generate_autoencoder,
-        np.arange(0, 10, 0.5),
-        np.arange(0, 10, 0.5),
-        file_name='./autoencoder_model_SNR_data_vs_SNR_test/',
-        verbose=1,
-        num_avg=50
+
+    x_train, y_train, x_valid, y_valid = load_data('./data/')
+
+    generate_nn(
+        x_train, y_train, x_valid, y_valid,
+        (1000, 1),
+        './nn_model/',
+        verbose=1
     )
+
+    generate_loss_vs_noise(
+        keras.models.load_model('./nn_model/'),
+        np.arange(0, 30, 0.1),
+        './nn_model_loss_vs_noise/',
+        verbose = 1
+    )
+
+    # generate_SNR_data_vs_SNR_test(
+    #     generate_autoencoder,
+    #     np.arange(0, 10, 0.5),
+    #     np.arange(0, 10, 0.5),
+    #     file_name='./autoencoder_model_SNR_data_vs_SNR_test/',
+    #     verbose=1,
+    #     num_avg=50
+    # )
 
     # # Generate the RTS data
     # generate_data(

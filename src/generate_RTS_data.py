@@ -6,6 +6,7 @@ import sys
 import pickle 
 import os
 import time
+import matplotlib.pyplot as plt
 
 def generate_data(num_data_points=10000, num_samples=1000, 
                 #   noise=generate_gaussian_noise(num_samples=1000, mean=0, std=0.5),
@@ -77,10 +78,33 @@ def generate_data(num_data_points=10000, num_samples=1000,
                 }
             )
         )
+
+        data['rts'].append(rts)
+        data['noisy_signal'].append(noisy_signal)
+
         writer.write(example.SerializeToString())
     
     writer.close()
     print("That took {} seconds".format(time.time() - current_time))
+
+    # random_indicies = np.random.uniform(0, num_data_points, 4).astype(int)
+
+    # # plot the data
+    # for i in random_indicies:
+    #     rts = data['rts'][i]
+    #     noisy_signal = data['noisy_signal'][i]
+
+    #     # plot the data
+    #     plt.figure(figsize=(10, 5), dpi=300, )
+    #     plt.plot(noisy_signal, label='Noisy Signal', color='purple', linewidth=1, alpha=0.5)    
+    #     plt.plot(rts, label='RTS', color='orange', linewidth=2)
+    #     plt.legend()
+    #     plt.title("RTS Signal and Noisy Signal")
+    #     plt.xlabel("Samples")
+    #     plt.ylabel("Amplitude")
+    #     plt.ylim(-0.5, 1.5)
+    #     plt.savefig("./data/plot_{}.png".format(i))
+    #     plt.close()
 
 
 
@@ -94,13 +118,10 @@ if __name__ == '__main__':
     generate_data(
         num_data_points=10_000,
         num_samples=1000,
-        # noise=np.zeros(1000),
-        # noise=generate_gaussian_noise(num_samples=1000, mean=0, std=0.2) + 
-            #   generate_sinusoidal_signal(num_samples=1000, freq=0.02, amplitude=0.02),
         vary_noise=True,
         verbose=True,
         file_name='signals.tfrecord',
         num_states=2,
         transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
-        SNR=20
+        SNR=10
     )
