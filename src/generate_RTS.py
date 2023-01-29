@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def generate_RTS(transition_probs, num_samples, num_states = 2):
 
+def generate_RTS(transition_probs, num_samples, num_states = 2):
     # Define the number of states and the transition probabilities
     # Set the initial state
     current_state = 0
@@ -40,6 +40,17 @@ def generate_gaussian_noise(num_samples, mean, std):
     noise = np.random.normal(mean, std, num_samples)
     return noise
 
+def generate_gaussian_noise_SNR(num_samples, SNR, signal):
+    sig_avg_watts = np.mean([rts_value**2 for rts_value in signal])
+
+    # use this to create a desired noise level
+    noise_avg_watts = sig_avg_watts / (10 ** (SNR / 10))
+
+    # Generate the noise based on the desired SNR
+    noise = generate_gaussian_noise(num_samples=num_samples, mean=0, std=np.sqrt(noise_avg_watts))
+    
+    return noise
+
 def rolling_average(signal, num_samples_per_average):
     # Create an array to hold the rolling averages
     rolling_averages = np.zeros(len(signal))
@@ -69,7 +80,7 @@ if __name__ == "__main__":
     noisy_rts = noise + rts
 
     plt.plot(sinusoidal + rts + noise, '-o', markersize=2)
-    plt.plot(rts, '-o', markersize=2)
+    # plt.plot(rts, '-o', markersize=2)
     plt.xlabel('Time')
     plt.ylabel('State')
     plt.show()

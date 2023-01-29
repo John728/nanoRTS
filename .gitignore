@@ -2,3 +2,5 @@
 *.pyc
 *.pkl
 variables
+*.tfrecord
+settings.json
