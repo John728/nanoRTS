@@ -3,8 +3,8 @@ from generate_RTS import generate_RTS, generate_gaussian_noise, rolling_average,
 from matplotlib import pyplot as plt
 import numpy as np
 
-model = keras.models.load_model('./')
-# model1 = keras.models.load_model('./model_2')
+model = keras.models.load_model('./autoencoder_model')
+model1 = keras.models.load_model('./autoencoder_model')
 
 # Generate RTS signal and noise
 rts = generate_RTS(
@@ -26,10 +26,10 @@ noise = generate_gaussian_noise(num_samples=1000, mean=0, std=1)
 noisy_signal = np.reshape(rts + noise, (1, 1000))
 # # Predict the state of the RTS
 predicted_rts = model.predict(noisy_signal)
-# predicted_rts1 = model1.predict(noisy_signal)
+predicted_rts1 = model1.predict(noisy_signal)
 
 predicted_rts = np.reshape(predicted_rts, (1000,))
-# predicted_rts1 = np.reshape(predicted_rts1, (1000,))
+predicted_rts1 = np.reshape(predicted_rts1, (1000,))
 
 
 threshold = 0.5
@@ -37,9 +37,8 @@ threshold = 0.5
 
 # # Plot the RTS signal and the predicted RTS
 plt.plot(rts + noise, label='Noisy Signal', color='yellow')
-# plt.plot(ra, label='Predicted RTS1', color='blue')
-plt.plot(rts, label='RTS', color='red')
-plt.plot(predicted_rts, label='Predicted RTS', color='green')
+plt.plot(predicted_rts, label='Predicted RTS', color='blue')
+plt.plot(predicted_rts1, label='Predicted RTS', color='green')
 plt.ylim(-2, 2)
 plt.legend()
 plt.show()
