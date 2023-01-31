@@ -1,20 +1,31 @@
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-from generate_RTS import generate_RTS, generate_gaussian_noise, generate_sinusoidal_signal
+from generate_RTS import (
+    generate_RTS,
+    generate_gaussian_noise,
+    generate_sinusoidal_signal,
+)
 import sys
-import pickle 
+import pickle
 import os
 import time
 import matplotlib.pyplot as plt
 
-def generate_data(num_data_points=10000, num_samples=1000, 
-                  vary_noise=False,
-                  verbose=True, file_name='signals.pkl',
-                  num_states=2, transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
-                  SNR=0, save_data=True):
 
-    data = {'rts': [], 'noisy_signal': []}
+def generate_data(
+    num_data_points=10000,
+    num_samples=1000,
+    vary_noise=False,
+    verbose=True,
+    file_name="signals.pkl",
+    num_states=2,
+    transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
+    SNR=0,
+    save_data=True,
+):
+
+    data = {"rts": [], "noisy_signal": []}
 
     # print a pretty "processing" sign
     if verbose:
@@ -31,9 +42,9 @@ def generate_data(num_data_points=10000, num_samples=1000,
 
         # Generate RTS signal
         rts = generate_RTS(
-            num_states=num_states, 
-            transition_probs=transition_probs, 
-            num_samples=num_samples
+            num_states=num_states,
+            transition_probs=transition_probs,
+            num_samples=num_samples,
         )
 
         # find average signal power
@@ -43,11 +54,17 @@ def generate_data(num_data_points=10000, num_samples=1000,
         noise_avg_watts = sig_avg_watts / (10 ** (SNR / 10))
 
         # Generate the noise based on the desired SNR
-       
+
         if vary_noise:
-            noise = generate_gaussian_noise(num_samples=1000, mean=0, std=np.sqrt(noise_avg_watts) * np.random.uniform(0.01, 3))
+            noise = generate_gaussian_noise(
+                num_samples=1000,
+                mean=0,
+                std=np.sqrt(noise_avg_watts) * np.random.uniform(0.01, 3),
+            )
         else:
-            noise = generate_gaussian_noise(num_samples=1000, mean=0, std=np.sqrt(noise_avg_watts))
+            noise = generate_gaussian_noise(
+                num_samples=1000, mean=0, std=np.sqrt(noise_avg_watts)
+            )
 
         # Add the noise to the RTS signal
         noisy_signal = rts + noise
@@ -64,8 +81,10 @@ def generate_data(num_data_points=10000, num_samples=1000,
 
         # print a pretty percentage
         if verbose:
-            percentage = round(((i + 1)/num_data_points) * 100, 3)
-            sys.stdout.write("\r{:.2f}% completed, writing file: {}".format(percentage, verbose_name))
+            percentage = round(((i + 1) / num_data_points) * 100, 3)
+            sys.stdout.write(
+                "\r{:.2f}% completed, writing file: {}".format(percentage, verbose_name)
+            )
             sys.stdout.flush()
 
         # write the data to a tfrecord file
@@ -73,18 +92,26 @@ def generate_data(num_data_points=10000, num_samples=1000,
             example = tf.train.Example(
                 features=tf.train.Features(
                     feature={
-                        'rts': tf.train.Feature(float_list=tf.train.FloatList(value=np.reshape(rts, (num_samples)))),
-                        'noisy_signal': tf.train.Feature(float_list=tf.train.FloatList(value=np.reshape(noisy_signal, (num_samples))))
+                        "rts": tf.train.Feature(
+                            float_list=tf.train.FloatList(
+                                value=np.reshape(rts, (num_samples))
+                            )
+                        ),
+                        "noisy_signal": tf.train.Feature(
+                            float_list=tf.train.FloatList(
+                                value=np.reshape(noisy_signal, (num_samples))
+                            )
+                        ),
                     }
                 )
             )
 
-        data['rts'].append(rts)
-        data['noisy_signal'].append(noisy_signal)
+        data["rts"].append(rts)
+        data["noisy_signal"].append(noisy_signal)
 
         if save_data:
             writer.write(example.SerializeToString())
-    
+
     if save_data:
         writer.close()
 
@@ -100,7 +127,7 @@ def generate_data(num_data_points=10000, num_samples=1000,
 
     #     # plot the data
     #     plt.figure(figsize=(10, 5), dpi=300, )
-    #     plt.plot(noisy_signal, label='Noisy Signal', color='purple', linewidth=1, alpha=0.5)    
+    #     plt.plot(noisy_signal, label='Noisy Signal', color='purple', linewidth=1, alpha=0.5)
     #     plt.plot(rts, label='RTS', color='orange', linewidth=2)
     #     plt.legend()
     #     plt.title("RTS Signal and Noisy Signal")
@@ -111,8 +138,7 @@ def generate_data(num_data_points=10000, num_samples=1000,
     #     plt.close()
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # clear the data folder
     for file in os.listdir("./data"):
@@ -124,7 +150,7 @@ if __name__ == '__main__':
         num_samples=1000,
         vary_noise=False,
         verbose=True,
-        file_name='signals.tfrecord',
+        file_name="signals.tfrecord",
         num_states=2,
         transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
         SNR=35,

@@ -2,7 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def generate_RTS(transition_probs, num_samples, num_states = 2, seed=None):
+def generate_RTS(
+    num_samples,
+    transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
+    num_states=2,
+    seed=None,
+):
     # Define the number of states and the transition probabilities
     # Set the initial state
     current_state = 0
@@ -18,14 +23,16 @@ def generate_RTS(transition_probs, num_samples, num_states = 2, seed=None):
         # Generate a random number between 0 and 1
         rand_num = np.random.rand()
         # Determine the next state using the transition probabilities
-        next_state = np.where(rand_num < np.cumsum(transition_probs[current_state]))[0][0]
+        next_state = np.where(rand_num < np.cumsum(transition_probs[current_state]))[0][
+            0
+        ]
         # Update the current state
         current_state = next_state
 
     return rts
 
 
-def generate_fixed_RTS(num_samples, transition_rate, num_states = 2):
+def generate_fixed_RTS(num_samples, transition_rate, num_states=2):
     # Set the initial state
     current_state = 0
     # Generate the RTS
@@ -34,9 +41,10 @@ def generate_fixed_RTS(num_samples, transition_rate, num_states = 2):
         # Append the current state to the RTS
         rts.append(current_state)
         # Transition to the other state after a fixed number of samples
-        if (i+1) % transition_rate == 0:
+        if (i + 1) % transition_rate == 0:
             current_state = (current_state + 1) % num_states
     return rts
+
 
 def generate_gaussian_noise(num_samples, mean, std, seed=None):
     # Generate Gaussian noise
@@ -45,6 +53,7 @@ def generate_gaussian_noise(num_samples, mean, std, seed=None):
     noise = np.random.normal(mean, std, num_samples)
     return noise
 
+
 def generate_gaussian_noise_SNR(num_samples, SNR, signal, seed=None):
     sig_avg_watts = np.mean([rts_value**2 for rts_value in signal])
 
@@ -52,9 +61,12 @@ def generate_gaussian_noise_SNR(num_samples, SNR, signal, seed=None):
     noise_avg_watts = sig_avg_watts / (10 ** (SNR / 10))
 
     # Generate the noise based on the desired SNR
-    noise = generate_gaussian_noise(num_samples=num_samples, mean=0, std=np.sqrt(noise_avg_watts), seed=seed)
-    
+    noise = generate_gaussian_noise(
+        num_samples=num_samples, mean=0, std=np.sqrt(noise_avg_watts), seed=seed
+    )
+
     return noise
+
 
 def rolling_average(signal, num_samples_per_average):
     # Create an array to hold the rolling averages
@@ -62,8 +74,9 @@ def rolling_average(signal, num_samples_per_average):
     # Calculate the rolling average
     for i in range(len(signal)):
         start = max(0, i - num_samples_per_average + 1)
-        rolling_averages[i] = np.mean(signal[start:i+1])
+        rolling_averages[i] = np.mean(signal[start : i + 1])
     return rolling_averages
+
 
 def generate_sinusoidal_signal(num_samples, freq, amplitude, phase=0):
     # Generate a sinusoidal signal
@@ -74,32 +87,12 @@ def generate_sinusoidal_signal(num_samples, freq, amplitude, phase=0):
 if __name__ == "__main__":
 
     rts = generate_RTS(
-        num_states=2, 
-        transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]), 
-        num_samples=1000
+        num_samples=100_000,
     )
 
-    # sinusoidal = generate_sinusoidal_signal(num_samples=1000, freq=0.02, amplitude=0.4)
-    noise = generate_gaussian_noise_SNR(num_samples=1000, SNR=35, signal=rts, seed=0)
-    plt.figure()
-    plt.plot(rts + noise, '-o', markersize=2)
-    # plt.plot(rts, '-o', markersize=2)
-    plt.xlabel('Time')
-    plt.ylabel('State')
-    plt.show()
+    state_one_count = len([x for x in rts if x > 0])
+    state_zero_count = len([x for x in rts if x < 1])
 
-    # noise = generate_gaussian_noise_SNR(num_samples=1000, SNR=2, signal=rts, seed=0)
-    # plt.figure()
-    # plt.plot(rts + noise, '-o', markersize=2)
-    # # plt.plot(rts, '-o', markersize=2)
-    # plt.xlabel('Time')
-    # plt.ylabel('State')
-    # plt.show()
-
-    # noise = generate_gaussian_noise_SNR(num_samples=1000, SNR=10, signal=rts, seed=0)
-    # plt.figure()
-    # plt.plot(rts + noise, '-o', markersize=2)
-    # # plt.plot(rts, '-o', markersize=2)
-    # plt.xlabel('Time')
-    # plt.ylabel('State')
-    # plt.show()
+    # they should roughly be 50000
+    assert state_one_count == 50000
+    assert state_zero_count == 50000
