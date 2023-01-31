@@ -3,7 +3,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import numpy as np
 from matplotlib import pyplot as plt
 from generate_RTS import generate_RTS, generate_gaussian_noise, generate_gaussian_noise_SNR
-from create_model import generate_autoencoder, generate_nn, load_data, process_data, get_data
+from model import generate_autoencoder, generate_nn, load_data, process_data, get_data
 from generate_RTS_data import generate_data
 from tensorflow import keras
 import sys

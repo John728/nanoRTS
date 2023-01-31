@@ -7,11 +7,11 @@ from generate_RTS import generate_RTS, generate_gaussian_noise_SNR
 import matplotlib.pyplot as plt
 from fractions import Fraction
 
-def process_data(data):
+def process_data(data, validation_split=0.3):
     df = pd.DataFrame(data)
 
     # Create training and validation splits
-    df_train = df.sample(frac=0.7, random_state=0)
+    df_train = df.sample(frac=(1 - validation_split), random_state=0)
     df_valid = df.drop(df_train.index)
 
     # Split the data into features and target
@@ -23,9 +23,9 @@ def process_data(data):
     return X_train, y_train, X_valid, y_valid    
 
 def load_data(data_dir, validation_split=0.3):
-    return process_data(get_data(data_dir, validation_split))
+    return process_data(get_data(data_dir), validation_split)
 
-def get_data(data_dir, validation_split=0.3):
+def get_data(data_dir):
     data = {'rts': [], 'noisy_signal': []}
     for filename in os.listdir(data_dir):
         if filename.endswith('.tfrecord'):
