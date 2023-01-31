@@ -243,9 +243,10 @@ def generate_loss_vs_noise(model, snr_range: np.arange, file_name: str, num_avg:
     plt.plot(snr_range, loss, color='orange', linewidth=2)
     plt.xlabel('SNR')
     plt.ylabel('Loss')
+    # plt.ylim(0, 0.5)
     plt.title('Loss vs. SNR')
     
-    plt.savefig(file_name + 'figure.png')
+    plt.savefig(file_name + 'Loss_vs_noise_figure.png')
 
     if verbose:
         print(f"\nLoss vs. SNR graph saved to {file_name}")
@@ -278,41 +279,106 @@ def generate_loss_vs_time(model_func, data, path: str, num_avg: int = 10, verbos
     plt.title('Loss vs. time')
     plt.savefig(path + 'loss_vs_time_figure.png')
 
+def generate_SNR_animation(model, SNR_range, path, starting_count=0):
+    i = starting_count
+
+    rts = generate_RTS(
+        num_states=2,
+        transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
+        num_samples=1000,
+        seed = 0
+    )
+    
+    for target_SNR in SNR_range:
+
+        sys.stdout.write(f"\rGenerating SNR animation, iteration {i + 1}/{len(SNR_range)}")
+
+        # Generate the RTS signal
+
+        # find average signal power
+        sig_avg_watts = np.mean([rts_value**2 for rts_value in rts])
+
+        # use this to create a desired noise level
+        noise_avg_watts = sig_avg_watts / (10 ** (target_SNR / 10))
+
+        # Generate the noise based on the desired SNR
+        noise = generate_gaussian_noise(num_samples=1000, mean=0, std=np.sqrt(noise_avg_watts), seed=0)
+
+        noisy_signal = rts + noise
+
+        # Predict the state of the RTS
+        predicted_rts = model.predict(np.reshape(noisy_signal, (1, 1000)), verbose=0)
+
+        predicted_rts = np.reshape(predicted_rts, (1000,))
+
+        # plot the signal
+        plt.figure(dpi=150, figsize=(10, 5))
+        plt.plot(noisy_signal, linewidth=1, color='purple', alpha=0.2, label='Noisy RTS Signal')
+        plt.plot(rts, color='red', linewidth=1, label='RTS Signal')
+        plt.plot(predicted_rts, color='orange', linewidth=2, label='Predicted RTS Signal')
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        plt.ylim(-0.5, 1.5)
+        plt.title(f'RTS Signal vs. Predicted RTS Signal for SNR = {target_SNR}')
+        # add loss to bottom of figure
+        plt.text(0, -0.4, f'Loss = {np.mean(np.square(rts - predicted_rts))}')
+        if i == 0:
+            plt.show()
+        plt.savefig(path + f'figure_{i}.png')
+        plt.close()
+        i = i + 1
+
 if __name__ == '__main__':
 
     # x_train, y_train, x_valid, y_valid = load_data('./data/')
 
-    # nn_model = generate_nn(
+    # ac_model, _ = generate_autoencoder(
     #     x_train, y_train, x_valid, y_valid,
     #     (1000, 1),
-    #     './models/nn_model/',
+    #     './models/autoencoder/',
     #     verbose=1,
-    #     save_model=True
+    #     save=True,
+    #     epochs=100,
+    #     batch_size=10
     # )
 
     # generate_loss_vs_noise(
-    #     keras.models.load_model('./models/nn_model/'),
+    #     ac_model,
     #     np.arange(0, 30, 0.1),
-    #     './models/nn_model/',
+    #     './models/autoencoder_model/',
     #     verbose = 1
     # )
 
     # generate_SNR_data_vs_SNR_test(
-    #     generate_nn,
+    #     generate_autoencoder,
     #     np.arange(0, 10, 0.5),
     #     np.arange(0, 10, 0.5),
-    #     path='./models/nn_model/',
+    #     path='./models/autoencoder_model/',
     #     verbose=1,
     #     num_avg=10
     # )
 
-    generate_loss_vs_time(
-        generate_nn,
-        get_data('./data/'),
-        path='./models/nn_model/',
-        verbose=1,
-        num_avg=10
+    # generate_loss_vs_time(
+    #     generate_autoencoder,
+    #     get_data('./data/'),
+    #     path='./models/autoencoder_model/',
+    #     verbose=1,
+    #     num_avg=10
+    # )
+
+    generate_SNR_animation(
+        keras.models.load_model('./models/autoencoder_model/'),
+        np.arange(0.005, 10, 0.1),
+        './models/autoencoder_model/animation_figures/',
+        starting_count=0
     )
+
+    # generate_SNR_animation(
+    #     keras.models.load_model('./models/autoencoder_model/'),
+    #     np.arange(1.095, 2, 0.005),
+    #     './models/autoencoder_model/animation_figures/',
+    #     starting_count=219
+    # )
 
     # # Generate the RTS data
     # generate_data(

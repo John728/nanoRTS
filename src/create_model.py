@@ -129,13 +129,13 @@ def generate_nn(X_train, y_train, X_valid, y_valid, input_shape, path_to_save=".
     model, history = fit_model(model, X_train, y_train, X_valid, y_valid, epochs, batch_size, verbose)
 
     if save_model:
-        model.save(path_to_save)
+        save_model_to_path(model, path_to_save)
 
     return model, history
     
 
-def generate_autoencoder(X_train, y_train, X_valid, y_valid, input_shape, path_to_save, 
-                         epochs=1000, batch_size=32, verbose=0):
+def generate_autoencoder(X_train, y_train, X_valid, y_valid, input_shape, path_to_save='./', 
+                         epochs=1000, batch_size=32, verbose=0, save_model=True):
     
     # define the model
     input_layer = Input(shape=input_shape)
@@ -167,7 +167,7 @@ def generate_autoencoder(X_train, y_train, X_valid, y_valid, input_shape, path_t
     model, history = fit_model(autoencoder, X_train, y_train, X_valid, y_valid, epochs, batch_size, verbose)
     
     if save_model:
-        save_model(model, path_to_save)
+        save_model_to_path(model, path_to_save)
 
     return model, history
 
@@ -178,7 +178,7 @@ def fit_model(model, X_train, y_train, X_valid, y_valid, epochs, batch_size, ver
     # # Create the early stopping callback
     early_stopping = EarlyStopping(
         min_delta=0.001, # minimium amount of change to count as an improvement
-        patience=20, # how many epochs to wait before stopping
+        patience=10, # how many epochs to wait before stopping
         restore_best_weights=True,
     )
 
@@ -206,7 +206,7 @@ def fit_model(model, X_train, y_train, X_valid, y_valid, epochs, batch_size, ver
 
     return model, history
 
-def save_model(model, path):
+def save_model_to_path(model, path):
     # if path does not exist, create it
     if not os.path.exists(path):
         os.makedirs(path)
@@ -217,4 +217,9 @@ def save_model(model, path):
 
 if __name__ == "__main__":
     X_train, y_train, X_valid, y_valid = load_data('/home/johnhenderson/SQA/nanoRTS/src/data/')
-    generate_nn(X_train, y_train, X_valid, y_valid, (1000, 1), './models/nn_model', verbose=1)
+    generate_autoencoder(
+        X_train, y_train, X_valid, y_valid, 
+        (1000, 1), './models/autoencoder_model',
+        verbose=1,
+        save=True
+    )

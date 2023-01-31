@@ -122,10 +122,10 @@ if __name__ == '__main__':
     generate_data(
         num_data_points=10_000,
         num_samples=1000,
-        vary_noise=True,
+        vary_noise=False,
         verbose=True,
         file_name='signals.tfrecord',
         num_states=2,
         transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
-        SNR=10
+        SNR=35,
     )
