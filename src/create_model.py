@@ -39,26 +39,8 @@ class Print_Progress(Callback):
         print("done!")
 
 
-
-def load_data(data_dir, validation_split=0.3):
-    data = {'rts': [], 'noisy_signal': []}
-    for filename in os.listdir(data_dir):
-        if filename.endswith('.tfrecord'):
-            record_iterator = tf.compat.v1.io.tf_record_iterator(path=os.path.join(data_dir, filename))
-            for string_record in record_iterator:
-                example = tf.train.Example()
-                example.ParseFromString(string_record)
-                rts = example.features.feature['rts'].float_list.value
-                noisy_signal = example.features.feature['noisy_signal'].float_list.value
-                data['rts'].append(rts)
-                data['noisy_signal'].append(noisy_signal)
-
-    # df = pd.DataFrame(data)
-
+def process_data(data):
     df = pd.DataFrame(data)
-
-    # find out the number of samples in each signal
-    num_samples = len(df['rts'][0])
 
     # Create training and validation splits
     df_train = df.sample(frac=0.7, random_state=0)
@@ -72,7 +54,23 @@ def load_data(data_dir, validation_split=0.3):
 
     return X_train, y_train, X_valid, y_valid    
 
-    
+def load_data(data_dir, validation_split=0.3):
+    return process_data(get_data(data_dir, validation_split))
+
+def get_data(data_dir, validation_split=0.3):
+    data = {'rts': [], 'noisy_signal': []}
+    for filename in os.listdir(data_dir):
+        if filename.endswith('.tfrecord'):
+            record_iterator = tf.compat.v1.io.tf_record_iterator(path=os.path.join(data_dir, filename))
+            for string_record in record_iterator:
+                example = tf.train.Example()
+                example.ParseFromString(string_record)
+                rts = example.features.feature['rts'].float_list.value
+                noisy_signal = example.features.feature['noisy_signal'].float_list.value
+                data['rts'].append(rts)
+                data['noisy_signal'].append(noisy_signal)
+
+    return data
 
 # def load_and_preprocess_data(filename):
 #     data = {'rts': [], 'noisy_signal': []}
@@ -114,8 +112,8 @@ def load_data(data_dir, validation_split=0.3):
 
 
 
-def generate_nn(X_train, y_train, X_valid, y_valid, input_shape, path_to_save, 
-                epochs=1000, batch_size=32, verbose=0):
+def generate_nn(X_train, y_train, X_valid, y_valid, input_shape, path_to_save="./", 
+                epochs=1000, batch_size=32, verbose=0, save_model=True):
     
     num_samples = input_shape[0]
 
@@ -128,36 +126,17 @@ def generate_nn(X_train, y_train, X_valid, y_valid, input_shape, path_to_save,
         layers.Dense(num_samples)
     ])
 
-    # # Compile the model
-    model.compile(optimizer='adam', loss='mae')
+    model, history = fit_model(model, X_train, y_train, X_valid, y_valid, epochs, batch_size, verbose)
 
-    # # Create the early stopping callback
-    early_stopping = EarlyStopping(
-        min_delta=0.001, # minimium amount of change to count as an improvement
-        patience=20, # how many epochs to wait before stopping
-        restore_best_weights=True,
-    )
+    if save_model:
+        save_model_to_path(model, path_to_save)
 
-    print_progress = Print_Progress()
-    print_progress.set_model(model)
-
-    # # Fit the model
-    history = model.fit(
-        X_train, y_train,
-        validation_data=(X_valid, y_valid),
-        batch_size=200,
-        epochs=1000,
-        callbacks=[early_stopping, print_progress],
-        verbose=0
-    )
-
-    model.save('./')
-
-def generate_autoencoder(X_train, y_train, X_valid, y_valid, input_shape, path_to_save, 
-                         epochs=1000, batch_size=32, verbose=0):
+    return model, history
     
-    start_time = time.time()
 
+def generate_autoencoder(X_train, y_train, X_valid, y_valid, input_shape, path_to_save='./', 
+                         epochs=1000, batch_size=32, verbose=0, save_model=True):
+    
     # define the model
     input_layer = Input(shape=input_shape)
 
@@ -184,15 +163,22 @@ def generate_autoencoder(X_train, y_train, X_valid, y_valid, input_shape, path_t
 
     # create the autoencoder model
     autoencoder = Model(input_layer, decoded)
-    autoencoder.compile(optimizer='adam', loss='mean_squared_error')
 
-    if verbose:
-        print("Pre-processing complete")
+    model, history = fit_model(autoencoder, X_train, y_train, X_valid, y_valid, epochs, batch_size, verbose)
+    
+    if save_model:
+        save_model_to_path(model, path_to_save)
+
+    return model, history
+
+def fit_model(model, X_train, y_train, X_valid, y_valid, epochs, batch_size, verbose):
+    # # Compile the model
+    model.compile(optimizer='adam', loss='mae')
 
     # # Create the early stopping callback
     early_stopping = EarlyStopping(
         min_delta=0.001, # minimium amount of change to count as an improvement
-        patience=50, # how many epochs to wait before stopping
+        patience=10, # how many epochs to wait before stopping
         restore_best_weights=True,
     )
 
@@ -204,53 +190,36 @@ def generate_autoencoder(X_train, y_train, X_valid, y_valid, input_shape, path_t
     )
 
     print_progress = Print_Progress()
-    print_progress.set_model(autoencoder)
+    print_progress.set_model(model)
 
-    if verbose:
-        print("Fitting model...")
+    # # Fit the model
+    #! fix verbosity
+    history = model.fit(
+        X_train, y_train,
+        validation_data=(X_valid, y_valid),
+        batch_size=batch_size,
+        epochs=epochs,
+        callbacks=[early_stopping, reduce_lr],
+        verbose=verbose,
+        initial_epoch=0
+    )
 
-    if verbose:
-        history = autoencoder.fit(
-            X_train, y_train,
-            validation_data=(X_valid, y_valid),
-            batch_size=batch_size,
-            epochs=epochs,
-            callbacks=[early_stopping, print_progress, reduce_lr],
-            verbose=1,
-            initial_epoch=0
-        )
-    else:
-        history = autoencoder.fit(
-            X_train, y_train,
-            validation_data=(X_valid, y_valid),
-            batch_size=batch_size,
-            epochs=epochs,
-            callbacks=[early_stopping, reduce_lr],
-            verbose=0,
-            initial_epoch=0
-        )
+    return model, history
 
-    # save the history
-    with open(path_to_save + '_history', 'wb') as f:
-        pickle.dump(history.history, f)
-    f.close()
-    
-    autoencoder.save(path_to_save)
-    end_time = time.time()
+def save_model_to_path(model, path):
+    # if path does not exist, create it
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-    return end_time - start_time
-
-# def split_data(data, validation_split=0.3):
-#     # Shuffle the data
-#     data = data.shuffle(buffer_size=len(data))
-
-#     # Split the data into training and validation sets
-#     train_data = data.take((1 - validation_split) * len(data))
-#     val_data = data.skip((1 - validation_split) * len(data))
-
-#     return train_data, val_data
+    # save the model
+    model.save(path)
 
 
 if __name__ == "__main__":
     X_train, y_train, X_valid, y_valid = load_data('/home/johnhenderson/SQA/nanoRTS/src/data/')
-    generate_nn(X_train, y_train, X_valid, y_valid, (1000, 1), './nn_model', verbose=1)
+    generate_autoencoder(
+        X_train, y_train, X_valid, y_valid, 
+        (1000, 1), './models/autoencoder_model',
+        verbose=1,
+        save=True
+    )

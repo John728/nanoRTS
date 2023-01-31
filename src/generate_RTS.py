@@ -2,10 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def generate_RTS(transition_probs, num_samples, num_states = 2):
+def generate_RTS(transition_probs, num_samples, num_states = 2, seed=None):
     # Define the number of states and the transition probabilities
     # Set the initial state
     current_state = 0
+
+    if seed is not None:
+        np.random.seed(seed)
 
     # Generate the RTS
     rts = []
@@ -35,19 +38,21 @@ def generate_fixed_RTS(num_samples, transition_rate, num_states = 2):
             current_state = (current_state + 1) % num_states
     return rts
 
-def generate_gaussian_noise(num_samples, mean, std):
+def generate_gaussian_noise(num_samples, mean, std, seed=None):
     # Generate Gaussian noise
+    if seed is not None:
+        np.random.seed(seed)
     noise = np.random.normal(mean, std, num_samples)
     return noise
 
-def generate_gaussian_noise_SNR(num_samples, SNR, signal):
+def generate_gaussian_noise_SNR(num_samples, SNR, signal, seed=None):
     sig_avg_watts = np.mean([rts_value**2 for rts_value in signal])
 
     # use this to create a desired noise level
     noise_avg_watts = sig_avg_watts / (10 ** (SNR / 10))
 
     # Generate the noise based on the desired SNR
-    noise = generate_gaussian_noise(num_samples=num_samples, mean=0, std=np.sqrt(noise_avg_watts))
+    noise = generate_gaussian_noise(num_samples=num_samples, mean=0, std=np.sqrt(noise_avg_watts), seed=seed)
     
     return noise
 
@@ -74,13 +79,27 @@ if __name__ == "__main__":
         num_samples=1000
     )
 
-    sinusoidal = generate_sinusoidal_signal(num_samples=1000, freq=0.02, amplitude=0.4)
-    noise = generate_gaussian_noise(num_samples=1000, mean=0, std=0.7)
-
-    noisy_rts = noise + rts
-
-    plt.plot(sinusoidal + rts + noise, '-o', markersize=2)
+    # sinusoidal = generate_sinusoidal_signal(num_samples=1000, freq=0.02, amplitude=0.4)
+    noise = generate_gaussian_noise_SNR(num_samples=1000, SNR=35, signal=rts, seed=0)
+    plt.figure()
+    plt.plot(rts + noise, '-o', markersize=2)
     # plt.plot(rts, '-o', markersize=2)
     plt.xlabel('Time')
     plt.ylabel('State')
     plt.show()
+
+    # noise = generate_gaussian_noise_SNR(num_samples=1000, SNR=2, signal=rts, seed=0)
+    # plt.figure()
+    # plt.plot(rts + noise, '-o', markersize=2)
+    # # plt.plot(rts, '-o', markersize=2)
+    # plt.xlabel('Time')
+    # plt.ylabel('State')
+    # plt.show()
+
+    # noise = generate_gaussian_noise_SNR(num_samples=1000, SNR=10, signal=rts, seed=0)
+    # plt.figure()
+    # plt.plot(rts + noise, '-o', markersize=2)
+    # # plt.plot(rts, '-o', markersize=2)
+    # plt.xlabel('Time')
+    # plt.ylabel('State')
+    # plt.show()
