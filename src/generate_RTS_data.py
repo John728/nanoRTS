@@ -18,11 +18,14 @@ def generate_data(
     num_samples=1000,
     vary_noise=False,
     verbose=True,
-    file_name="signals.pkl",
+    file_name="signals.tfrecord",
     num_states=2,
     transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
     SNR=0,
     save_data=True,
+    path="./",
+    use_std=False,
+    std=0.1,
 ):
 
     data = {"rts": [], "noisy_signal": []}
@@ -36,7 +39,7 @@ def generate_data(
     verbose_name = "./data/" + file_name + "_" + "10000"
 
     if save_data:
-        writer = tf.io.TFRecordWriter("./data/" + file_name)
+        writer = tf.io.TFRecordWriter(path + file_name)
 
     for i in range(num_data_points):
 
@@ -66,18 +69,11 @@ def generate_data(
                 num_samples=1000, mean=0, std=np.sqrt(noise_avg_watts)
             )
 
+        if use_std:
+            noise = generate_gaussian_noise(num_samples=1000, mean=0, std=std)
+
         # Add the noise to the RTS signal
         noisy_signal = rts + noise
-
-        # add the noise and the rts to the data
-        # data['rts'].append()
-        # data['noisy_signal'].append()
-
-        # if ((i + 1) % 10_000 == 0):
-        #     with open("./data/" + file_name + "_" + str(i + 1), 'wb') as f:
-        #         pickle.dump(data, f)
-        #     f.close()
-        #     verbose_name = "./data/" + file_name + "_" + str(i + 1)
 
         # print a pretty percentage
         if verbose:
@@ -118,6 +114,58 @@ def generate_data(
     return data
 
 
+def generate_classification_data(model):
+    
+    print("generating classification data...")
+
+    rts_data = generate_data(
+        num_data_points=1_000,
+        num_samples=1000,
+        vary_noise=False,
+        verbose=False,
+        file_name="classification_rts.tfrecord",
+        num_states=2,
+        path="./data/classification/",
+        save_data=False,
+        use_std=True,
+        std=0.1,
+    )
+
+    rts_data['rts'] = [1] * 1000
+
+    no_rts_data = generate_data(
+        num_data_points=1_000,
+        num_samples=1000,
+        vary_noise=False,
+        verbose=False,
+        file_name="classification_rts.tfrecord",
+        num_states=2,
+        path="./data/classification/",
+        save_data=False,
+        transition_probs=np.array([[1, 0], [0.01, 0.99]]),
+        use_std=True,
+        std=0.1,
+    )
+
+    no_rts_data['rts'] = [0] * 1000
+
+    print("processing classification data...")
+
+    # combine the data
+    rts_data["noisy_signal"].extend(no_rts_data["noisy_signal"])
+    rts_data["rts"].extend(no_rts_data["rts"])
+
+    print("preparing classification data...")
+    
+    for i in range(len(rts_data["noisy_signal"])):
+        sys.stdout.write("\r{} complete".format(i))
+        rts_data["noisy_signal"][i] = model.predict(rts_data["noisy_signal"][i])
+
+    print("saving data...")
+
+    # save the data
+    with open("./src/data/classification/classification_data.pickle", "wb") as file:
+        pickle.dump(rts_data, file)
 
 
 

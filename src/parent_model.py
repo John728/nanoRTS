@@ -21,7 +21,7 @@ class Print_Progress(Callback):
         sys.stdout.write("\033c")
 
         self.epochs = self.params["epochs"]
-        with open("ascii_text.txt", "r") as file:
+        with open("./src/ascii_text.txt", "r") as file:
             for line in file:
                 print(line[:-1])
 
@@ -82,12 +82,12 @@ class model:
             callbacks = [early_stopping, reduce_lr, print_progress]
         else:
             callbacks = [early_stopping, reduce_lr]
-
+            
         # Fit the model
         history = self.specific_model.fit(
             X_train,
-            y_train,
-            validation_data=(X_valid, y_valid),
+            X_valid,
+            validation_data=(y_train, y_valid),
             batch_size=self.batch_size,
             epochs=self.epochs,
             callbacks=callbacks,
@@ -116,6 +116,9 @@ class model:
         predicted_sig = self.specific_model.predict(X)
         predicted_sig = np.reshape(predicted_sig, (1000,))
         return predicted_sig
+    
+    def set_model(self, model):
+        self.specific_model = model
 
 
 # if __name__ == '__main__':

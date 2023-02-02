@@ -16,8 +16,8 @@ def process_data(data, validation_split=0.3):
 
     # Split the data into features and target
     X_train = np.array(df_train["noisy_signal"].tolist())
-    y_train = np.array(df_train["noisy_signal"].tolist())
-    X_valid = np.array(df_valid["rts"].tolist())
+    y_train = np.array(df_valid["noisy_signal"].tolist())
+    X_valid = np.array(df_train["rts"].tolist())
     y_valid = np.array(df_valid["rts"].tolist())
 
     return X_train, y_train, X_valid, y_valid

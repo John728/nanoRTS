@@ -25,11 +25,11 @@ class nn_model(model):
         # Create the model
         self.specific_model = Sequential(
             [
-                layers.Dense(1000, activation="relu", input_shape=(num_samples,)),
+                layers.Dense(1000, activation="relu", input_shape=self.input_shape),
                 layers.Dense(2000, activation="relu"),
                 layers.Dense(3000, activation="relu"),
                 layers.Dense(2000, activation="relu"),
-                layers.Dense(num_samples),
+                layers.Dense(1),
             ]
         )
 

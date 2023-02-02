@@ -4,58 +4,61 @@ import numpy as np
 import tensorflow as tf
 from generate_RTS_data import generate_data, generate_classification_data
 from parent_model import model
-from custom_models import autoencoder_model
+from custom_models import autoencoder_model, nn_model
 from data_handle import load_data
+from generate_RTS import generate_RTS, generate_gaussian_noise, generate_gaussian_noise_SNR
+import matplotlib.pyplot as plt
+import pickle as plk
+from data_handle import process_data
 
-# clear the data folder
-# for file in os.listdir("./data/classification"):
-#     os.remove("./data/classification" + file)
-#     print("Removed file: {}".format(file))
-
-
-# data = generate_data(
-#     num_data_points=10_000,
-#     num_samples=1000,
-#     vary_noise=False,
-#     verbose=True,
-#     path="./data/classification/",
-#     num_states=2,
-#     transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
-#     SNR=30,
-#     save_data=True,
-# )
-
-# X_train, y_train, X_valid, y_valid = load_data('./data/classification/')
-
-# model = autoencoder_model(
-#     input_shape=(1000, 1),
-#     verbose=True,
-# )
-
-# model.generate()
-
-# model.fit_model(
-#     X_train, y_train, X_valid, y_valid
-# )
-
-# model.save_model("./generated_models/autoencoder_model/")
-
+# load pickle data 
 
 # model = autoencoder_model((1000,))
 # model.load_model("./src/generated_models/autoencoder_model")
 
+# generate_classification_data(model)
 
-# generate_classification_data(
-#     model=model,
-#     num_data_points=1000,
-#     num_samples=1000,
-#     vary_noise=False,
-#     verbose=False,
-#     path="./src/data/classification/",
-#     num_states=2,
-#     transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
-#     SNR=0,
-#     save_data=True,
-#     use_std=True,
-#     std=1
+data = plk.load(open('./src/data/classification/classification_data.pickle', 'rb'))
+
+X_train, y_train, X_valid, y_valid = process_data(data, 0.3)
+
+# reshape the valid data
+# X_valid = X_valid.reshape(-1, 1)
+# y_valid = y_valid.reshape(-1, 1)
+# X_train = X_train.reshape(-1, 1)
+# y_train = y_train.reshape(-1, 1)
+
+model = nn_model(
+    input_shape=X_train.shape[1:],
+    epochs=100,
+    batch_size=32,
+    verbose=1,
+)
+
+model.generate()
+
+model.fit_model(X_train, y_train, X_valid, y_valid)
+
+model.save_model('./src/generated_models/classification_model/')
+
+# model = autoencoder_model((1000,))
+# model.load_model("./generated_models/autoencoder_model")
+
+# generate_classification_data(model)
+
+# rts = generate_RTS(
+#     num_samples=1000
 # )
+
+# noise = generate_gaussian_noise_SNR(
+#     num_samples=1000,
+#     signal=rts,
+#     SNR=10
+# )
+
+# # predicted_rts = model.predict(rts + noise)
+
+# plt.plot(rts, color="red")
+# plt.plot(rts + noise, color="blue")
+# # plt.plot(predicted_rts, color="blue")
+# plt.show()
