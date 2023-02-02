@@ -11,8 +11,7 @@ from keras.callbacks import EarlyStopping, Callback, ReduceLROnPlateau
 from keras.layers import Input, Conv1D, MaxPooling1D, UpSampling1D, Dropout
 from keras.models import Model
 from sklearn.model_selection import train_test_split
-import data_handle
-
+from parent_model import model
 
 class nn_model(model):
     def generate(self):
@@ -24,7 +23,7 @@ class nn_model(model):
         num_samples = self.input_shape[0]
 
         # Create the model
-        model = Sequential(
+        self.specific_model = Sequential(
             [
                 layers.Dense(1000, activation="relu", input_shape=(num_samples,)),
                 layers.Dense(2000, activation="relu"),
@@ -33,8 +32,6 @@ class nn_model(model):
                 layers.Dense(num_samples),
             ]
         )
-
-        self.model = model
 
 
 class autoencoder_model(model):
@@ -45,7 +42,7 @@ class autoencoder_model(model):
 
         self.model_has_been_generated = True
 
-        model = Sequential(
+        self.specific_model = Sequential(
             [
                 Conv1D(
                     32,
@@ -74,8 +71,6 @@ class autoencoder_model(model):
                 Conv1D(1, 3, activation="sigmoid", padding="same"),
             ]
         )
-
-        self.model = model
 
 
 class classic_model(model):

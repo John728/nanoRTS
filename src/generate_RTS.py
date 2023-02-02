@@ -46,7 +46,7 @@ def generate_fixed_RTS(num_samples, transition_rate, num_states=2):
     return rts
 
 
-def generate_gaussian_noise(num_samples, mean, std, seed=None):
+def generate_gaussian_noise(num_samples, mean=0, std=1, seed=None):
     # Generate Gaussian noise
     if seed is not None:
         np.random.seed(seed)

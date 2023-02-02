@@ -116,26 +116,9 @@ def generate_data(
         writer.close()
 
     return data
-    # print("That took {} seconds".format(time.time() - current_time))
 
-    # random_indicies = np.random.uniform(0, num_data_points, 4).astype(int)
 
-    # # plot the data
-    # for i in random_indicies:
-    #     rts = data['rts'][i]
-    #     noisy_signal = data['noisy_signal'][i]
 
-    #     # plot the data
-    #     plt.figure(figsize=(10, 5), dpi=300, )
-    #     plt.plot(noisy_signal, label='Noisy Signal', color='purple', linewidth=1, alpha=0.5)
-    #     plt.plot(rts, label='RTS', color='orange', linewidth=2)
-    #     plt.legend()
-    #     plt.title("RTS Signal and Noisy Signal")
-    #     plt.xlabel("Samples")
-    #     plt.ylabel("Amplitude")
-    #     plt.ylim(-0.5, 1.5)
-    #     plt.savefig("./data/plot_{}.png".format(i))
-    #     plt.close()
 
 
 if __name__ == "__main__":
