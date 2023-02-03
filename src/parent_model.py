@@ -44,7 +44,8 @@ class model:
 
     model_has_been_generated = False
 
-    def __init__(self, input_shape, epochs=1000, batch_size=32, verbose=0):
+    def __init__(self, output_shape, input_shape, epochs=1000, batch_size=32, verbose=0):
+        self.output_shape = output_shape
         self.input_shape = input_shape
         self.epochs = epochs
         self.batch_size = batch_size
@@ -114,7 +115,7 @@ class model:
     def predict(self, X):
         X = np.reshape(X, (1, 1000))
         predicted_sig = self.specific_model.predict(X)
-        predicted_sig = np.reshape(predicted_sig, (1000,))
+        predicted_sig = np.reshape(predicted_sig, self.output_shape)
         return predicted_sig
     
     def set_model(self, model):

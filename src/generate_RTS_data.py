@@ -11,6 +11,7 @@ import pickle
 import os
 import time
 import matplotlib.pyplot as plt
+import random
 
 
 def generate_data(
@@ -119,7 +120,7 @@ def generate_classification_data(model):
     print("generating classification data...")
 
     rts_data = generate_data(
-        num_data_points=1_000,
+        num_data_points=5_000,
         num_samples=1000,
         vary_noise=False,
         verbose=False,
@@ -128,13 +129,13 @@ def generate_classification_data(model):
         path="./data/classification/",
         save_data=False,
         use_std=True,
-        std=0.1,
+        std=1,
     )
 
-    rts_data['rts'] = [1] * 1000
+    rts_data['rts'] = [1] * 5000
 
     no_rts_data = generate_data(
-        num_data_points=1_000,
+        num_data_points=5_000,
         num_samples=1000,
         vary_noise=False,
         verbose=False,
@@ -144,16 +145,19 @@ def generate_classification_data(model):
         save_data=False,
         transition_probs=np.array([[1, 0], [0.01, 0.99]]),
         use_std=True,
-        std=0.1,
+        std=1,
     )
 
-    no_rts_data['rts'] = [0] * 1000
+    no_rts_data['rts'] = [0] * 5000
 
     print("processing classification data...")
 
     # combine the data
     rts_data["noisy_signal"].extend(no_rts_data["noisy_signal"])
     rts_data["rts"].extend(no_rts_data["rts"])
+
+    random.Random(4).shuffle(rts_data["noisy_signal"])
+    random.Random(4).shuffle(rts_data["rts"])
 
     print("preparing classification data...")
     
