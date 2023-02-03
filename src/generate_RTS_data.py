@@ -115,12 +115,12 @@ def generate_data(
     return data
 
 
-def generate_classification_data(model):
+def generate_classification_data(model, num_traces=10_000):
     
     print("generating classification data...")
 
     rts_data = generate_data(
-        num_data_points=5_000,
+        num_data_points=num_traces//2,
         num_samples=1000,
         vary_noise=False,
         verbose=False,
@@ -132,10 +132,10 @@ def generate_classification_data(model):
         std=1,
     )
 
-    rts_data['rts'] = [1] * 5000
+    rts_data['rts'] = [1] * (num_traces//2)
 
     no_rts_data = generate_data(
-        num_data_points=5_000,
+        num_data_points=num_traces//2,
         num_samples=1000,
         vary_noise=False,
         verbose=False,
@@ -148,7 +148,7 @@ def generate_classification_data(model):
         std=1,
     )
 
-    no_rts_data['rts'] = [0] * 5000
+    no_rts_data['rts'] = [0] * (num_traces//2)
 
     print("processing classification data...")
 
