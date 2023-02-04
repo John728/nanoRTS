@@ -7,12 +7,14 @@ from generate_RTS import (
     generate_RTS,
     generate_gaussian_noise,
     generate_gaussian_noise_SNR,
+    rolling_average,
 )
-from model import generate_autoencoder, generate_nn, load_data, process_data, get_data
+# from model import generate_autoencoder, generate_nn, load_data, process_data, get_data
 from generate_RTS_data import generate_data
 from tensorflow import keras
 import sys
-
+from custom_models import autoencoder_model, nn_model
+import random
 
 def generate_SNR_data_vs_SNR_test(
     model_func,
@@ -370,8 +372,67 @@ def generate_SNR_animation(model, SNR_range, path, starting_count=0):
         plt.close()
         i = i + 1
 
+def create_model_prediction(noise_range):
+    rts_model = nn_model((1,), (1000,1))
+    fit_model = autoencoder_model((1000,), (1000,1))
+    fit_model.load_model("./src/generated_models/autoencoder_model/")
+    rts_model.load_model("./src/generated_models/basic_classification_model/")
+
+    data = {
+        'std': [],
+        'correct_rate': [],
+    }
+
+    average = 200
+
+    for std in noise_range:
+        
+        correct_rate = 0
+
+        for i in range(average):
+
+            sys.stdout.write(f"\rCalculating rate for {std}/{noise_range[-1]}, iteration {i + 1}/{average}")
+
+            rts_choice = random.choice([0, 1])
+
+            if rts_choice == 0:
+                rts = np.zeros(1000)
+            else:
+                rts = generate_RTS(
+                    num_samples=1000,
+                )
+
+            noise = generate_gaussian_noise(
+                num_samples=1000,
+                std=std,
+            )
+
+            confidece = rts_model.predict(fit_model.predict(rolling_average(rts + noise, 10)))
+
+            if confidece > 0.5:
+                confidece = 1
+            else:
+                confidece = 0
+            
+            if confidece == rts_choice:
+                correct_rate += 1
+
+        correct_rate /= average
+
+        data['std'].append(std)
+        data['correct_rate'].append(correct_rate)
+
+    plt.plot(data['std'], data['correct_rate'])
+    plt.xlabel("Noise Standard Deviation")
+    plt.ylabel("Correct Rate")
+    plt.title("Correct Rate vs. Noise Standard Deviation")
+    plt.savefig("./figure2.png")
 
 if __name__ == "__main__":
+
+    create_model_prediction(
+        np.arange(0, 2, 0.01)
+    )
 
     # x_train, y_train, x_valid, y_valid = load_data('./data/')
 
@@ -409,12 +470,12 @@ if __name__ == "__main__":
     #     num_avg=10
     # )
 
-    generate_SNR_animation(
-        keras.models.load_model("./models/autoencoder_model/"),
-        np.arange(0.005, 10, 0.1),
-        "./models/autoencoder_model/animation_figures/",
-        starting_count=0,
-    )
+    # generate_SNR_animation(
+    #     keras.models.load_model("./models/autoencoder_model/"),
+    #     np.arange(0.005, 10, 0.1),
+    #     "./models/autoencoder_model/animation_figures/",
+    #     starting_count=0,
+    # )
 
     # generate_SNR_animation(
     #     keras.models.load_model('./models/autoencoder_model/'),

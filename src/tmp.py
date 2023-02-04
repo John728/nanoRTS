@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from generate_RTS_data import generate_data, generate_classification_data
 from parent_model import model
-from custom_models import autoencoder_model, nn_model
+from custom_models import autoencoder_model, nn_model, gaussian_model
 from data_handle import load_data
 from generate_RTS import generate_RTS, generate_gaussian_noise, generate_gaussian_noise_SNR, rolling_average
 import matplotlib.pyplot as plt
@@ -15,6 +15,7 @@ rts_model = nn_model((1,), (1000,1))
 fit_model = autoencoder_model((1000,), (1000,1))
 fit_model.load_model("./src/generated_models/autoencoder_model/")
 rts_model.load_model("./src/generated_models/classification_model/")
+gausian_mod = gaussian_model((1,), (1000,1))
 
 rts = generate_RTS(
     num_samples=1000,
@@ -24,13 +25,17 @@ rts = generate_RTS(
 
 noise = generate_gaussian_noise(
     num_samples=1000,
-    std=1,
+    std=0.2,
 )
 
-print("Confidence: " + str(rts_model.predict(rts + noise)))
+confidence = rts_model.predict((rolling_average(rts + noise, 2)))
+
+print("My confidence: " + str(confidence))
+# print("Gaussion confidence: " + str(gausian_mod.predict(rolling_average(rts + noise, 2))))
 
 plt.plot(rts + noise, color="purple")
-plt.plot(fit_model.predict(rolling_average(rts + noise, 20)), color="blue")
+if confidence > 0.5:
+    plt.plot(fit_model.predict(rolling_average(rts + noise, 2)), color="blue")
 # add text to the plot with confidence that the model contains rts put in bottom left corner
 # plt.text(0, -0.4, ))
 # plt.ylim(-0.5, 1.5)
@@ -61,7 +66,7 @@ plt.show()
 
 # model.fit_model(X_train, y_train, X_valid, y_valid)
 
-# model.save_model('./src/generated_models/classification_model/')
+# model.save_model('./src/generated_models/basic_classification_model/')
 
 # =================================================================================================
 

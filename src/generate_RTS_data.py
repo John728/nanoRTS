@@ -129,7 +129,7 @@ def generate_classification_data(model, num_traces=10_000):
         path="./data/classification/",
         save_data=False,
         use_std=True,
-        std=1,
+        std=5,
     )
 
     rts_data['rts'] = [1] * (num_traces//2)
@@ -145,7 +145,7 @@ def generate_classification_data(model, num_traces=10_000):
         save_data=False,
         transition_probs=np.array([[1, 0], [0.01, 0.99]]),
         use_std=True,
-        std=1,
+        std=5,
     )
 
     no_rts_data['rts'] = [0] * (num_traces//2)
@@ -161,9 +161,9 @@ def generate_classification_data(model, num_traces=10_000):
 
     print("preparing classification data...")
     
-    for i in range(len(rts_data["noisy_signal"])):
-        sys.stdout.write("\r{} complete".format(i))
-        rts_data["noisy_signal"][i] = model.predict(rts_data["noisy_signal"][i])
+    # for i in range(len(rts_data["noisy_signal"])):
+    #     sys.stdout.write("\r{} complete".format(i))
+    #     rts_data["noisy_signal"][i] = model.predict(rts_data["noisy_signal"][i])
 
     print("saving data...")
 
