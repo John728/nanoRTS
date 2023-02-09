@@ -14,6 +14,7 @@ from keras.models import Model
 from sklearn.model_selection import train_test_split
 from parent_model import model
 import numpy as np
+from scipy.stats import norm
 
 class nn_model(model):
     def generate(self):
@@ -29,7 +30,6 @@ class nn_model(model):
             [
                 layers.Dense(1000, activation="relu", input_shape=self.input_shape),
                 layers.Dense(2000, activation="relu"),
-                layers.Dense(3000, activation="relu"),
                 layers.Dense(3000, activation="relu"),
                 layers.Dense(2000, activation="relu"),
                 layers.Dense(1),
@@ -100,12 +100,22 @@ class gaussian_model(model):
         pass
 
     def predict(self, x):
-        # Fit a Gaussian Process model to the data
-        x = np.reshape(x, (-1, 1))
-        kernel = GPy.kern.RBF(input_dim=1)
-        model = GPy.models.GPRegression(np.array(x).reshape(-1, 1), np.zeros_like(x), kernel)
-        model.optimize()
-        
-        # Calculate the confidence in the model fit
-        confidence = model.log_likelihood()
-        return confidence
+        arr = []
+        for i in range(len(x) - 1):
+            arr.extend(np.arange(x[i], x[i + 1], 0.1))
+
+        arr.sort()
+
+        arr1 = [ i for i in arr if i < 0.5]
+        arr2 = [ i for i in arr if i >= 0.5]
+
+        mu1, std1 = norm.fit(arr1)
+        mu2, std2 = norm.fit(arr2)
+
+        print(mu1, std1)
+        print(mu2, std2)
+
+        if mu1 > -0.4 and mu1 < 0.5 and mu2 > 0.8 and mu2 < 1.5:
+            return 1
+        else:
+            return 0

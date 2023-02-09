@@ -33,7 +33,7 @@ def generate_data(
 
     # print a pretty "processing" sign
     if verbose:
-        with open("ascii_text.txt", "r") as file:
+        with open("./src/ascii_text.txt", "r") as file:
             for line in file:
                 print(line[:-1])
 
@@ -145,7 +145,7 @@ def generate_classification_data(model, num_traces=10_000):
         save_data=False,
         transition_probs=np.array([[1, 0], [0.01, 0.99]]),
         use_std=True,
-        std=5,
+        std=2,
     )
 
     no_rts_data['rts'] = [0] * (num_traces//2)
@@ -161,9 +161,9 @@ def generate_classification_data(model, num_traces=10_000):
 
     print("preparing classification data...")
     
-    # for i in range(len(rts_data["noisy_signal"])):
-    #     sys.stdout.write("\r{} complete".format(i))
-    #     rts_data["noisy_signal"][i] = model.predict(rts_data["noisy_signal"][i])
+    for i in range(len(rts_data["noisy_signal"])):
+        sys.stdout.write("\r{} complete".format(i))
+        rts_data["noisy_signal"][i] = model.predict(rts_data["noisy_signal"][i])
 
     print("saving data...")
 
@@ -175,10 +175,23 @@ def generate_classification_data(model, num_traces=10_000):
 
 if __name__ == "__main__":
 
-    # clear the data folder
-    for file in os.listdir("./data"):
-        os.remove("./data/" + file)
-        print("Removed file: {}".format(file))
+    # # clear the data folder
+    # for file in os.listdir("./data"):
+    #     os.remove("./data/" + file)
+    #     print("Removed file: {}".format(file))
+
+    # generate_data(
+    #     num_data_points=10_000,
+    #     num_samples=1000,
+    #     vary_noise=False,
+    #     verbose=True,
+    #     file_name="signals.tfrecord",
+    #     num_states=2,
+    #     transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
+    #     SNR=35,
+    # )
+
+    curr_time = time.time()
 
     generate_data(
         num_data_points=10_000,
@@ -188,5 +201,8 @@ if __name__ == "__main__":
         file_name="signals.tfrecord",
         num_states=2,
         transition_probs=np.array([[0.99, 0.01], [0.01, 0.99]]),
-        SNR=35,
+        use_std=True,
+        std=5,
     )
+
+    print("That took {} seconds".format(time.time() - curr_time))
